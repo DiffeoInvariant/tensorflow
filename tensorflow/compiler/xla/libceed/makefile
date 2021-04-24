@@ -1,7 +1,9 @@
-TENSORFLOW_BASE := /home/emily/tensorflow
-TENSORFLOW_LIB := $(TENSORFLOW_BASE)/TODO-FILL-IN-HERE
+TENSORFLOW_BASE := /home/emily/tensorflow/bazel-tensorflow
+TENSORFLOW_DIR := /home/emily/tensorflow
+TENSORFLOW_LIB := $(TENSORFLOW_BASE)/bazel-bin/tensorflow/libtensorflow.so
 ABSEIL_BASE := /home/emily/abseil-cpp
-INCLS := -I$(TENSORFLOW_BASE)/tensorflow -I$(ABSEIL_BASE)
+EIGEN_BASE := /home/emily/eigen
+INCLS := -I$(TENSORFLOW_BASE) -I$(ABSEIL_BASE) -I$(EIGEN_BASE) -I$(TENSORFLOW_DIR) -I$(TENSORFLOW_BASE)/tensorflow/core/framework
 LDFLAGS := -L$(TENSORFLOW_LIB) -ltensorflow
 
 CXX := clang++
@@ -10,7 +12,11 @@ CXXFLAGS = -std=c++17 $(INCLS) $(CXXOPT) -shared -fPIC
 
 LIB_TARGET := libxla_caller.so
 
-SRCS := xla_caller.cc
+SRCS := xla_caller.cc\
+
+.PHONY: $(LIB_TARGET)
+
+default: all
 
 all: $(LIB_TARGET)
 

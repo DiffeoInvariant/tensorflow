@@ -31,16 +31,17 @@ std::pair<std::unique_ptr<xla::PjRtClient>,
 
 
 
+std::shared_ptr<xla::Literal> run_single_output_computation(xla::PjRtExecutable *executable, const std::vector<std::unique_ptr<xla::PjRtBuffer>>& args);
 
 /* a helper function to iterate over the tuple and fill a vector with args; if I == sizeof...(Ts), 
    we're past the end of the tuple, and have nothing left to do */
 template<std::size_t I = 0, typename Func_t, typename... Ts>
-inline typename std::enable_if<I == sizeof...(Ts), void>::type for_each(std::tuple<Ts...> &, Func_t) {}
+inline typename std::enable_if<I == sizeof...(Ts), void>::type for_each(const std::tuple<Ts...> &, Func_t) {}
 
 /* the condition for enable_if is I less than sizeof...(Ts). Don't be confused
    by the seemingly-extraneous <, it's there for the less than */
 template<std::size_t I = 0, typename Func_t, typename... Ts>
-inline typename std::enable_if<(I < sizeof...(Ts)), void>::type for_each(std::tuple<Ts...>& t, Func_t f)
+inline typename std::enable_if<I < sizeof...(Ts), void>::type for_each(const std::tuple<Ts...>& t, Func_t f)
 {
   f(std::get<I>(t));
   for_each<I + 1, Func_t, Ts...>(t, f);
@@ -56,7 +57,7 @@ std::vector<std::unique_ptr<xla::PjRtBuffer>> get_args(const std::tuple<Containe
   auto filler = [&args, client, device_num](const auto& vec)
   {
     auto literal = from_vec(vec);
-    args.push_back(client->BufferFromHostLiteral(literal, client->addressable_devices()[device_num]));
+    args.push_back(client->BufferFromHostLiteral(literal, client->addressable_devices()[device_num]).ValueOrDie());
   };
 		   
   for_each(containers, filler);
@@ -64,7 +65,6 @@ std::vector<std::unique_ptr<xla::PjRtBuffer>> get_args(const std::tuple<Containe
 }
 
 
-std::shared_ptr<xla::Literal> run_single_output_computation(xla::PjRtExecutable *executable, const std::vector<std::unique_ptr<xla::PjRtBuffer>>& args);
 
 
 
